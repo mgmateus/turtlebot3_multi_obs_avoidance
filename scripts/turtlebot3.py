@@ -71,15 +71,18 @@ class TurtleBot3:
             else:
                 self.__scan_range.append(scan.ranges[i])
 
+    def stop(self):
+        self.__publisher_cmd_vel.publish(Twist())
+
     def shutdown(self):
         rospy.loginfo("Terminado atividade do TurtleBot")
-        self.__publisher_cmd_vel.publish(Twist())
+        self.stop()
         rospy.sleep(1)
         rospy.signal_shutdown("The End")
 
     def get_state(self, action):
         current_distance = round(math.hypot(self.__goal.x - self.__position.x, self.__goal.y - self.__position.y),2) 
-        
+
         if 0.13 > min(self.__scan_range) > 0:
             collision = True
 
