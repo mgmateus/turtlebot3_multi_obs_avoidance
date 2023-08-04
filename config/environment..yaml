@@ -1,0 +1,2 @@
+services:
+  reset_simulation: "gazebo/reset_simulation"

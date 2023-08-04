@@ -1,0 +1,6 @@
+subscribers:
+  odom: 'odom'
+  scan: 'scan'
+
+publishers:
+  cmd_vel: 'cmd_vel'

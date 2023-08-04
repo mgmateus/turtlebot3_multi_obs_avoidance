@@ -1,0 +1,9 @@
+services: 
+  spawn_sdf_model: "gazebo/spawn_sdf_model"
+  delete_model: "gazebo/delete_model"
+
+subscribers:
+  model_states: "gazebo/model_states"
+
+
+
