@@ -23,7 +23,7 @@ from gazebo_msgs.msg import ModelState, ModelStates
 
 class Combination():
     def __init__(self):
-        self.pub_model = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=1)
+        self.pub_model = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=10)
         self.moving()
 
     def moving(self):

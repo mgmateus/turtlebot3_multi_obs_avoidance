@@ -13,6 +13,7 @@ from gazebo_msgs.msg import (
     ModelState,
     ModelStates
 )
+from gazebo_msgs.srv import SetModelState
 from geometry_msgs.msg import Pose
 
 from turtlebot3 import TurtleBot3
@@ -176,21 +177,68 @@ class Environment(Respawn):
         self.__check_for_services(services_timeout)
 
     def __read_parameters(self) -> None:
-        self.__service_reset_simulation = rospy.get_param("simulation/services/reset_simulation")
+        self.__service_name_reset_simulation = rospy.get_param("simulation/services/reset_simulation")
+        self.__service_name_reset_world = rospy.get_param("simulation/services/reset_world")
+        self.__service_name_set_model_state = rospy.get_param('simulation/services/set_model_state')
+        self.__service_name_delete_model = rospy.get_param("simulation/services/delete_model")
+        self.__service_name_pause_physics = rospy.get_param("simulation/services/pause_physics")
+        self.__service_name_unpause_physics = rospy.get_param("simulation/services/unpause_physics")
         
     def __init_services(self) -> None:
-        self.__reset_simulation_proxy = rospy.ServiceProxy(self.__service_reset_simulation, Empty)
+        self.__reset_simulation_proxy = rospy.ServiceProxy(self.__service_name_reset_simulation, Empty)
+        self.__pause_physics_proxy = rospy.ServiceProxy(self.__service_name_pause_physics, Empty)
+        self.__unpause_physics_proxy = rospy.ServiceProxy(self.__service_name_unpause_physics, Empty)
+        self.__reset_world_proxy = rospy.ServiceProxy(self.__service_name_reset_world, Empty)
+        self.__set_model_state_proxy = rospy.ServiceProxy(self.__service_name_set_model_state, SetModelState)
+        self.__delete_model_proxy = rospy.ServiceProxy(self.__service_name_delete_model, DeleteModel)
 
     def __check_for_services(self, services_timeout: float) -> None:
         try:
-            rospy.wait_for_service(self.__service_reset_simulation, timeout=services_timeout)
-
+            rospy.wait_for_service(self.__service_name_reset_simulation, timeout=services_timeout)
+            rospy.wait_for_service(self.__service_name_reset_world, timeout=services_timeout)
+            rospy.wait_for_service(self.__service_name_set_model_state, timeout=services_timeout)
+            rospy.wait_for_service(self.__service_name_delete_model, timeout=services_timeout)
         except rospy.ROSException as ros_exception:
             raise rospy.ROSException from ros_exception
 
     def _reset_simulation(self) -> bool:
         try:
+            self.__pause_physics_proxy()
+            self.__unpause_physics_proxy()
             self.__reset_simulation_proxy()
+            
+            return True
+        except rospy.ServiceException as service_exception:
+            raise rospy.ServiceException from service_exception
+        
+    def _reset_world(self) -> bool:
+        try:
+            self.__pause_physics_proxy()
+            self.__reset_world_proxy()
+            self.__unpause_physics_proxy()
+            
+            return True
+        except rospy.ServiceException as service_exception:
+            raise rospy.ServiceException from service_exception
+        
+    def _set_model_state(self) -> bool:
+        try:
+
+            self.__pause_physics_proxy()
+            
+            state_msg = ModelState()
+            state_msg.model_name = 'turtlebot3_burger'
+            state_msg.pose.position.x = -0.7
+            state_msg.pose.position.y = 0
+            state_msg.pose.position.z = 0
+            state_msg.pose.orientation.x = 0
+            state_msg.pose.orientation.y = 0
+            state_msg.pose.orientation.z = 0
+            state_msg.pose.orientation.w = 0
+
+            self.__set_model_state_proxy(state_msg)
+
+            self.__unpause_physics_proxy()
             return True
         except rospy.ServiceException as service_exception:
             raise rospy.ServiceException from service_exception
@@ -216,7 +264,8 @@ class Environment(Respawn):
         return left + forward + right + backward
 
     def reset(self):
-        self._reset_simulation() 
+        self._set_model_state()
+        
         self.__n_steps = 0
         _ = self.__turtle.get_state(np.zeros(shape=(self.__action_dim,)))
         
@@ -239,8 +288,7 @@ class Environment(Respawn):
 
         if self.__turtle.is_collision():
             self.__collision_numbers += 1
-            self.__n_steps = self.__max_steps
-
+            self._set_model_state()
             rospy.loginfo("**********")
             rospy.loginfo("COLLISION!!")
             rospy.loginfo("**********")

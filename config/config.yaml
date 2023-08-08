@@ -5,14 +5,15 @@ simulation:
     spawn_sdf_model: 'gazebo/spawn_sdf_model'
     delete_model: 'gazebo/delete_model'
     reset_simulation: 'gazebo/reset_simulation'
+    reset_world: 'gazebo/reset_world'
+    set_model_state: 'gazebo/set_model_state'
+    pause_physics: 'gazebo/pause_physics'
+    unpause_physics: 'gazebo/unpause_physics'
+
 
   subscribers:
 
     model_states: 'gazebo/model_states'
-
-  publishers:
-
-    set_model_state: 'gazebo/set_model_state'
 
 turtlebot3:
 

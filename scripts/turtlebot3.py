@@ -55,12 +55,13 @@ class TurtleBot3:
 
         self.__position = Point()
         self.__heading = 0
+        self.__yaw = 0
         self.__scan_range = []
         self.__pid = PID()
         self.__cmd_vel = Twist()
 
-        self.past_scan = None
-        self.current_scan = None
+        self.past_scan = {'left' : 3.5, 'forward' : 3.5, 'right' : 3.5, 'backward' : 3.5}
+        self.current_scan = {'left' : 3.5, 'forward' : 3.5, 'right' : 3.5, 'backward' : 3.5}
 
         self.__read_parameters()
         self.__init_subscribers()
@@ -102,6 +103,7 @@ class TurtleBot3:
         self.__yaw = yaw
 
     def _scan_callback(self, scan):
+    
 
         for i in range(len(scan.ranges)):
             if scan.ranges[i] == float('Inf'):
@@ -110,6 +112,7 @@ class TurtleBot3:
                 self.__scan_range.append(0)
             else:
                 self.__scan_range.append(scan.ranges[i]) #0 - 359
+
 
         if not self.past_scan and not self.current_scan:
             self.past_scan = {'left' : min(self.__scan_range[225:315]), 'forward' : min(self.__scan_range[315:359] + self.__scan_range[0:45]), \
@@ -121,7 +124,7 @@ class TurtleBot3:
             self.past_scan = self.current_scan
             self.current_scan = {'left' : min(self.__scan_range[225:315]), 'forward' : min(self.__scan_range[315:359] + self.__scan_range[0:45]), \
                                    'right' : min(self.__scan_range[45:135]), 'backward' : min(self.__scan_range[135:225])}
-            
+                        
 
     def _heading(self, target= None, goal= []):
         if goal:
