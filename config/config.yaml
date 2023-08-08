@@ -1,0 +1,41 @@
+simulation:
+
+  services: 
+
+    spawn_sdf_model: 'gazebo/spawn_sdf_model'
+    delete_model: 'gazebo/delete_model'
+    reset_simulation: 'gazebo/reset_simulation'
+
+  subscribers:
+
+    model_states: 'gazebo/model_states'
+
+  publishers:
+
+    set_model_state: 'gazebo/set_model_state'
+
+turtlebot3:
+
+  subscribers:
+
+    odom: 'odom'
+    scan: 'scan'
+
+  publishers:
+
+    cmd_vel: 'cmd_vel'
+    debbug: 'debbug'
+
+
+params:
+  state_dimension: 6 
+  action_dimension: 2
+  learning_rate: 0.001
+  gamma: 0.8
+  alpha: 0.2
+  buffer_size: 50000
+  batch_size: 512
+  num_episodes: 10000
+  max_steps: 2000
+  stoped_episode: 0
+  max_reward: 0

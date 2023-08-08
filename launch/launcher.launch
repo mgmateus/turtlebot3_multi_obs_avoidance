@@ -1,7 +1,11 @@
 <launch>
-	<node pkg="path_controller" type="path_controller.py" name="path_controller" output="screen" />
-	<node pkg="path_controller" type="combination_obstacle_1.py" name="combination_obstacle_1" output="screen" />
-  	<node pkg="path_controller" type="combination_obstacle_2.py" name="combination_obstacle_2" output="screen" />
+	<rosparam command="load" file="$(find turtlebot3_multi_obs_avoidance)/config/config.yaml"/>
+	<arg name="training" default="True"/> 
+	<node pkg="turtlebot3_multi_obs_avoidance" type="main.py" name="turtlebot3_multi_obs_avoidance" output="screen">
+		<param name="training"  value="$(arg training)"/>
+	</node>
+	<node pkg="turtlebot3_multi_obs_avoidance" type="combination_obstacle_1.py" name="combination_obstacle_1" output="screen"/>
+  	<node pkg="turtlebot3_multi_obs_avoidance" type="combination_obstacle_2.py" name="combination_obstacle_2" output="screen"/>
 	
 	<arg name="model" default="$(env TURTLEBOT3_MODEL)" doc="model type [burger, waffle, waffle_pi]"/>
 	<arg name="x_pos" default="-0.7"/>
@@ -9,7 +13,7 @@
 	<arg name="z_pos" default="0.0"/>
 
 	<include file="$(find gazebo_ros)/launch/empty_world.launch">
-		<arg name="world_name" value="$(find path_controller)/world/scenario.world"/>
+		<arg name="world_name" value="$(find turtlebot3_multi_obs_avoidance)/world/scenario.world"/>
 		<arg name="paused" value="false"/>
 		<arg name="use_sim_time" value="true"/>
 		<arg name="gui" value="true"/>
