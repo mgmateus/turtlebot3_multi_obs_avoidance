@@ -21,6 +21,9 @@ if __name__ == "__main__":
     BUFFER_SIZE= rospy.get_param("params/num_episodes")
     BATCH_SIZE= rospy.get_param("params/batch_size")
 
+    ALPHA = rospy.get_param("params/alpha_reward")
+    BETHA = rospy.get_param("params/betha_reward")
+
     STOPED = rospy.get_param("params/stoped_episode")
     EPS= rospy.get_param("params/stoped_episode")
 
@@ -28,6 +31,8 @@ if __name__ == "__main__":
 
 
     env = Environment(SPACE_STATE_DIM, SPACE_ACTION_DIM, MAX_STEPS)
+    env.alpha = ALPHA
+    env.betha = BETHA
     agent = DDPGagent(SPACE_STATE_DIM, SPACE_ACTION_DIM, buffer_size=BUFFER_SIZE)
     noise = OUNoise(SPACE_ACTION_DIM)
 
@@ -68,9 +73,10 @@ if __name__ == "__main__":
                     agent.memory.push(state, action, reward, new_state, done)
 
             if is_training and len(agent.memory) > SPACE_ACTION_DIM*BATCH_SIZE and not eps%10 == 0:
-                rospy.logwarn("--------- UPDATE ----------")
+                #rospy.logwarn("--------- UPDATE ----------")
                 agent.update(BATCH_SIZE)
-
+            
+            rospy.logwarn(f"Reward: {reward}")
             state = copy.deepcopy(new_state)   
             
             agent.save_state(eps, step, reward, state)
@@ -81,7 +87,6 @@ if __name__ == "__main__":
                 rospy.logwarn("Sigma: %s", str(noise.sigma))
             
                 break
-        
         if is_training:
             agent.save_models(eps)
             agent.save_rewards(eps, rewards_current_episode)

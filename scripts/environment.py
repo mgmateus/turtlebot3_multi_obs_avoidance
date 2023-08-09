@@ -168,21 +168,31 @@ class Environment(Respawn):
         self.__goal_numbers = 10
         self.__init_goal = True
 
-        self.__alpha = 1.85
-        self.__betha = 185.71
+        self.__alpha = 0.1#1.85
+        self.__betha = 10#185.71
 
         self.repulse = lambda d, d0, betha : 0.5*betha*((1/d)-(1/d0))
 
-        self.__read_files()
         self.__read_parameters()
         self.__init_services()
         self.__check_for_services(services_timeout)
 
+    @property
+    def alpha(self):
+        return self.__alpha
+    
+    @alpha.setter
+    def alpha(self, set_alpha):
+        self.__alpha = set_alpha
 
-    def __read_files(self):
-        return
-        with open('/opt/ros/noetic/share/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf') as file:
-            self.__model = file.read()
+    @property
+    def betha(self):
+        return self.__betha
+    
+    @betha.setter
+    def betha(self, set_betha):
+        self.__betha = set_betha
+
 
     def __read_parameters(self) -> None:
         self.__service_name_reset_simulation = rospy.get_param("simulation/services/reset_simulation")
@@ -229,7 +239,6 @@ class Environment(Respawn):
         except rospy.ServiceException as service_exception:
             raise rospy.ServiceException from service_exception
 
-    
             
     def _unpause_physics(self) -> bool:
         try:
@@ -275,7 +284,7 @@ class Environment(Respawn):
 
     def _gravitational_potential_field(self):
         #beta, alpha
-        return 0.5 * self.__alpha * self.__turtle.euclidian_distance_to_goal()
+        return 0.5 * self.__alpha * (1/self.__turtle.euclidian_distance_to_goal())
     
     def _repulsive_potential_field(self):
         collision_warn = self.__turtle.collision_warn()
@@ -293,12 +302,13 @@ class Environment(Respawn):
         
         return left + forward + right + backward
     
-    def reset(self):
+    def _reset(self):
         self._pause_physics()
-        self._reset_simulation()
+        self._reset_world()
         self._unpause_physics()
-        self.__turtle.scan_range = [float('Inf')]
         
+    def reset(self):
+        self._reset()
         self.__n_steps = 0
         _ = self.__turtle.get_state(np.zeros(shape=(self.__action_dim,)))
         return self.__observation_space
@@ -320,16 +330,14 @@ class Environment(Respawn):
 
         if self.__turtle.is_collision():
             self.__collision_numbers += 1
-            self._pause_physics()
-            self._reset_simulation()
-            self._unpause_physics()
-            self.__turtle.scan_range = [float('Inf')]
+            self._reset()
+            
 
             rospy.loginfo("**********")
             rospy.loginfo("COLLISION!!")
             rospy.loginfo("**********")
 
-        return self._gravitational_potential_field() + self._repulsive_potential_field()
+        return self._gravitational_potential_field() - self._repulsive_potential_field()
         
     def step(self, action):
         self.__observation_space, done = self.__turtle.get_state(action)
