@@ -15,6 +15,8 @@ from gazebo_msgs.msg import (
 )
 from gazebo_msgs.srv import SetModelState
 from geometry_msgs.msg import Pose
+from sensor_msgs.msg import LaserScan
+
 
 from turtlebot3 import TurtleBot3
 
@@ -144,7 +146,6 @@ class Respawn():
                 self.__goal_position.position.x = goal_x_list[self.__index]
                 self.__goal_position.position.y = goal_y_list[self.__index]
 
-        time.sleep(0.5)
         self._respawn_model()
 
         self.__last_goal_x = self.__goal_position.position.x
@@ -172,9 +173,16 @@ class Environment(Respawn):
 
         self.repulse = lambda d, d0, betha : 0.5*betha*((1/d)-(1/d0))
 
+        self.__read_files()
         self.__read_parameters()
         self.__init_services()
         self.__check_for_services(services_timeout)
+
+
+    def __read_files(self):
+        return
+        with open('/opt/ros/noetic/share/turtlebot3_gazebo/models/turtlebot3_burger/model.sdf') as file:
+            self.__model = file.read()
 
     def __read_parameters(self) -> None:
         self.__service_name_reset_simulation = rospy.get_param("simulation/services/reset_simulation")
@@ -183,6 +191,7 @@ class Environment(Respawn):
         self.__service_name_delete_model = rospy.get_param("simulation/services/delete_model")
         self.__service_name_pause_physics = rospy.get_param("simulation/services/pause_physics")
         self.__service_name_unpause_physics = rospy.get_param("simulation/services/unpause_physics")
+        self.__service_name_spawn_sdf_model = rospy.get_param("simulation/services/spawn_sdf_model")
         
     def __init_services(self) -> None:
         self.__reset_simulation_proxy = rospy.ServiceProxy(self.__service_name_reset_simulation, Empty)
@@ -191,6 +200,7 @@ class Environment(Respawn):
         self.__reset_world_proxy = rospy.ServiceProxy(self.__service_name_reset_world, Empty)
         self.__set_model_state_proxy = rospy.ServiceProxy(self.__service_name_set_model_state, SetModelState)
         self.__delete_model_proxy = rospy.ServiceProxy(self.__service_name_delete_model, DeleteModel)
+        self.__spawn_sdf_model_proxy = rospy.ServiceProxy(self.__service_name_spawn_sdf_model, SpawnModel)
 
     def __check_for_services(self, services_timeout: float) -> None:
         try:
@@ -198,13 +208,39 @@ class Environment(Respawn):
             rospy.wait_for_service(self.__service_name_reset_world, timeout=services_timeout)
             rospy.wait_for_service(self.__service_name_set_model_state, timeout=services_timeout)
             rospy.wait_for_service(self.__service_name_delete_model, timeout=services_timeout)
+            rospy.wait_for_service(self.__service_name_pause_physics, timeout=services_timeout)
+            rospy.wait_for_service(self.__service_name_unpause_physics, timeout=services_timeout)
+            rospy.wait_for_service(self.__service_name_spawn_sdf_model, timeout=services_timeout)
         except rospy.ROSException as ros_exception:
             raise rospy.ROSException from ros_exception
+        
+    def _delete_model(self) -> bool:
+        try:
+            self.__delete_model_proxy('turtlebot3_burger')
+            return True
+        except rospy.ServiceException as service_exception:
+            raise rospy.ServiceException from service_exception
 
-    def _reset_simulation(self) -> bool:
+    def _pause_physics(self) -> bool:
         try:
             self.__pause_physics_proxy()
+            
+            return True
+        except rospy.ServiceException as service_exception:
+            raise rospy.ServiceException from service_exception
+
+    
+            
+    def _unpause_physics(self) -> bool:
+        try:
             self.__unpause_physics_proxy()
+            
+            return True
+        except rospy.ServiceException as service_exception:
+            raise rospy.ServiceException from service_exception
+        
+    def _reset_simulation(self) -> bool:
+        try:
             self.__reset_simulation_proxy()
             
             return True
@@ -213,10 +249,7 @@ class Environment(Respawn):
         
     def _reset_world(self) -> bool:
         try:
-            self.__pause_physics_proxy()
             self.__reset_world_proxy()
-            self.__unpause_physics_proxy()
-            
             return True
         except rospy.ServiceException as service_exception:
             raise rospy.ServiceException from service_exception
@@ -224,8 +257,6 @@ class Environment(Respawn):
     def _set_model_state(self) -> bool:
         try:
 
-            self.__pause_physics_proxy()
-            
             state_msg = ModelState()
             state_msg.model_name = 'turtlebot3_burger'
             state_msg.pose.position.x = -0.7
@@ -238,7 +269,6 @@ class Environment(Respawn):
 
             self.__set_model_state_proxy(state_msg)
 
-            self.__unpause_physics_proxy()
             return True
         except rospy.ServiceException as service_exception:
             raise rospy.ServiceException from service_exception
@@ -262,13 +292,15 @@ class Environment(Respawn):
                 if collision_warn[3] else 0
         
         return left + forward + right + backward
-
+    
     def reset(self):
-        self._set_model_state()
+        self._pause_physics()
+        self._reset_simulation()
+        self._unpause_physics()
+        self.__turtle.scan_range = [float('Inf')]
         
         self.__n_steps = 0
         _ = self.__turtle.get_state(np.zeros(shape=(self.__action_dim,)))
-        
         return self.__observation_space
      
     def set_reward(self, done):
@@ -288,7 +320,11 @@ class Environment(Respawn):
 
         if self.__turtle.is_collision():
             self.__collision_numbers += 1
-            self._set_model_state()
+            self._pause_physics()
+            self._reset_simulation()
+            self._unpause_physics()
+            self.__turtle.scan_range = [float('Inf')]
+
             rospy.loginfo("**********")
             rospy.loginfo("COLLISION!!")
             rospy.loginfo("**********")
@@ -299,7 +335,6 @@ class Environment(Respawn):
         self.__observation_space, done = self.__turtle.get_state(action)
         reward = self.set_reward(done)
         self.__n_steps += 1
-        
         if self.__n_steps < self.__max_steps:
             return np.asarray(self.__observation_space), reward, done
         else:
