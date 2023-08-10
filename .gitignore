@@ -1,6 +1,6 @@
-__pycache__/
+/scripts/__pycache__/
 *.pyc
-log/
+/log/
 *.csv
-log/observation/
+/log/observation/
 *.csv
