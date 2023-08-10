@@ -40,5 +40,5 @@ params:
   max_steps: 2000
   stoped_episode: 0
   max_reward: 0
-  alpha_reward: 10
-  betha_reward: 0.1
+  alpha_reward: 1
+  betha_reward: 10

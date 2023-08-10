@@ -105,16 +105,6 @@ class TurtleBot3:
         self.__yaw = yaw
                         
     def _scan_callback(self, scan):
-        '''
-        
-        for i in range(len(scan.ranges)):
-            if scan.ranges[i] == float('Inf'):
-                self.scan_range.append(3.5)
-            elif np.isnan(scan.ranges[i]):
-                self.scan_range.append(0)
-            else:
-                self.scan_range.append(scan.ranges[i]) #0 - 359
-        '''
         self.__raw_scan_range = scan.ranges
 
     def _heading(self, target= None, goal= []):

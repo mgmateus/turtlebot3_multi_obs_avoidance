@@ -283,8 +283,9 @@ class Environment(Respawn):
             raise rospy.ServiceException from service_exception
 
     def _gravitational_potential_field(self):
-        #beta, alpha
-        return 0.5 * self.__alpha * (1/self.__turtle.euclidian_distance_to_goal())
+        if self.__n_steps > 100:
+            return 0.5 * self.__alpha * (1/self.__turtle.euclidian_distance_to_goal())
+        return 0.5 * self.__alpha * self.__turtle.euclidian_distance_to_goal()
     
     def _repulsive_potential_field(self):
         collision_warn = self.__turtle.collision_warn()
@@ -332,7 +333,6 @@ class Environment(Respawn):
             self.__collision_numbers += 1
             self._reset()
             
-
             rospy.loginfo("**********")
             rospy.loginfo("COLLISION!!")
             rospy.loginfo("**********")
