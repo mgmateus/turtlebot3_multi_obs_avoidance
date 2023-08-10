@@ -343,7 +343,7 @@ class Environment(Respawn):
             rospy.loginfo("COLLISION!!")
             rospy.loginfo("**********")
 
-        return self._gravitational_potential_field() - self._repulsive_potential_field()
+        return (self._gravitational_potential_field() - self._repulsive_potential_field())*1e-2
         
     def step(self, action):
         self.__observation_space, done = self.__turtle.get_state(action)
