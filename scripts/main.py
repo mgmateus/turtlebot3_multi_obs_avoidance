@@ -33,6 +33,7 @@ if __name__ == "__main__":
     env = Environment(SPACE_STATE_DIM, SPACE_ACTION_DIM, MAX_STEPS)
     env.alpha = ALPHA
     env.betha = BETHA
+    env.is_training = is_training
     agent = DDPGagent(SPACE_STATE_DIM, SPACE_ACTION_DIM, buffer_size=BUFFER_SIZE)
     noise = OUNoise(SPACE_ACTION_DIM)
 

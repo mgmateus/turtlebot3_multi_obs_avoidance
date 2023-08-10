@@ -28,8 +28,8 @@ class Respawn():
         self.__stage = 4
 
         self.__goal_position = Pose()
-        self.__init_goal_x = 0.6
-        self.__init_goal_y = 0.0
+        self.__init_goal_x = 0.1
+        self.__init_goal_y = 1.2
         self.__goal_position.position.x = self.__init_goal_x
         self.__goal_position.position.y = self.__init_goal_y
         self.__last_goal_x = self.__init_goal_x
@@ -167,6 +167,8 @@ class Environment(Respawn):
         self.__collision_numbers = 0
         self.__goal_numbers = 10
         self.__init_goal = True
+        self.__count_goals_to_reset = 0
+        self.is_training = True
 
         self.__alpha = 0.1#1.85
         self.__betha = 10#185.71
@@ -319,10 +321,13 @@ class Environment(Respawn):
         if self.__init_goal:
             self.__turtle.goal = self.get_position()
             self.__init_goal = False
+
         if done:
             self.__turtle.stop()
-            if inital_distance >= 2.0: #alvo mais distante 3.6
+            self.__count_goals_to_reset += 1
+            if self.__count_goals_to_reset == 500: #alvo mais distante 3.6
                 self.__goal_numbers -= 1
+                self.__count_goals_to_reset = 0
                 self.__turtle.goal = self.get_position(position_check=True, delete=True)
 
             rospy.loginfo("**********")
@@ -330,7 +335,8 @@ class Environment(Respawn):
             rospy.loginfo("**********")
 
         if self.__turtle.is_collision():
-            self.__collision_numbers += 1
+            if not self.is_training:
+                self.__collision_numbers += 1
             self._reset()
             
             rospy.loginfo("**********")
