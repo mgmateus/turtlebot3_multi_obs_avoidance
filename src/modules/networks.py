@@ -40,3 +40,36 @@ class Critic(nn.Module):
         Q = self.fc3(l2)
 
         return Q
+    
+class ActorLSTM(nn.Module):
+    def __init__(self, space_states_dim, space_actions_dim, device, LAYER1_SIZE= 300, LAYER2_SIZE= 200):
+        super(Actor, self).__init__()
+        self.device = device
+        self.lstm = nn.LSTM(space_states_dim, LAYER1_SIZE).to(self.device)
+        self.fc2= nn.Linear(LAYER1_SIZE, LAYER2_SIZE).to(self.device)
+        self.fc3= nn.Linear(LAYER2_SIZE, space_actions_dim).to(self.device)
+
+
+    def forward(self, state):
+        lstm, _ = self.lstm(state)
+        l2 = F.relu(self.fc2(lstm)).to(self.device)
+        actions = T.tanh(self.fc3(l2))
+
+        return actions
+
+class CriticLSTM(nn.Module):
+    def __init__(self, space_states_dim, space_actions_dim, device, LAYER1_SIZE= 300, LAYER2_SIZE= 200):
+        super(Critic, self).__init__()
+        self.device = device
+        self.lstm = nn.LSTM(space_states_dim+space_actions_dim, LAYER1_SIZE).to(self.device)
+        self.fc2= nn.Linear(LAYER1_SIZE, LAYER2_SIZE).to(self.device)
+        self.fc3= nn.Linear(LAYER2_SIZE, 1).to(self.device)
+
+
+    def forward(self, state, action):
+        x =T.cat([state, action],1).to(self.device) # ----- 4 -----
+        lstm, _ = self.lstm(x)
+        l2 = F.relu(self.fc2(lstm)).to(self.device)
+        Q = self.fc3(l2)
+
+        return Q

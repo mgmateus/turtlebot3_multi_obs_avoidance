@@ -164,9 +164,12 @@ class Environment(Respawn):
         self.__n_steps = 0
         self.__max_steps = max_steps
 
+        self.__training = True
+
         self.__collision_numbers = 0
         self.__goal_numbers = 10
         self.__init_goal = True
+        self.__count_goals = 0
 
         self.__alpha = 0.1#1.85
         self.__betha = 10#185.71
@@ -318,30 +321,27 @@ class Environment(Respawn):
         if self.__init_goal:
             self.__turtle.goal = self.get_position()
             self.__init_goal = False
-
+            
         
         if done:
             self.__turtle.stop()
-            if inital_distance >= 2.0: #alvo mais distante 3.6
+            self.__count_goals += 1
+            if self.__count_goals == 500: #alvo mais distante 3.6
                 self.__goal_numbers -= 1
                 self.__turtle.goal = self.get_position(position_check=True, delete=True)
 
-            reward = 100
             rospy.loginfo("**********")
             rospy.loginfo("WELL DONE!!")
             rospy.loginfo("**********")
 
-        elif self.__turtle.is_collision():
-            self.__collision_numbers += 1
+        if self.__turtle.is_collision():
+            if not self.__training:
+                self.__collision_numbers += 1
             self._reset()
             
-            reward = 100
             rospy.loginfo("**********")
             rospy.loginfo("COLLISION!!")
             rospy.loginfo("**********")
-        
-        else:
-            reward = inital_distance - self.__turtle.euclidian_distance_to_goal()
 
         return self._gravitational_potential_field() - self._repulsive_potential_field()
         
