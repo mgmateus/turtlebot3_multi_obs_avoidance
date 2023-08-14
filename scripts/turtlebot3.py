@@ -105,16 +105,6 @@ class TurtleBot3:
         self.__yaw = yaw
                         
     def _scan_callback(self, scan):
-        '''
-        
-        for i in range(len(scan.ranges)):
-            if scan.ranges[i] == float('Inf'):
-                self.scan_range.append(3.5)
-            elif np.isnan(scan.ranges[i]):
-                self.scan_range.append(0)
-            else:
-                self.scan_range.append(scan.ranges[i]) #0 - 359
-        '''
         self.__raw_scan_range = scan.ranges
 
     def _heading(self, target= None, goal= []):
@@ -188,7 +178,7 @@ class TurtleBot3:
         #rospy.logwarn(f"{self.current_scan['forward']-self.past_scan['forward']}")
         target_position = np.clip(action[0], -0.5, 0.5)
         target_angle = np.clip(action[1], -np.pi, np.pi)
-
+        rospy.logwarn(f"Action ---> {action}")
         self.__cmd_vel.linear.x, self.__cmd_vel.angular.z = self.__pid.get_control_inputs(self._euclidian_distance_to_target(target_position),\
                                                                                           self._heading(target=target_angle))
         
@@ -204,7 +194,7 @@ class TurtleBot3:
 
         done = True if distance_to_goal <= 0.2 else False
 
-        observation = [distance_to_goal, angle_to_goal, left, forward, right, backward]
+        observation = [distance_to_goal, angle_to_goal] + self.__raw_scan_range
 
         return observation, done
         

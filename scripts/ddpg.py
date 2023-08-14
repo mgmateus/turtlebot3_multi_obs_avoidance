@@ -18,8 +18,8 @@ from torch import *
 from torch.autograd import Variable
 
 from modules.networks import (
-    ActorLSTM,
-    CriticLSTM
+    Actor,
+    Critic
 )
 
 from modules.replay_buffer import ReplayBuffer
@@ -43,13 +43,13 @@ class DDPGagent:
         self.episode= 0
 
         # Networks
-        self.actor = ActorLSTM(space_states_dim, space_actions_dim, device= self.device)
-        self.actor_target = ActorLSTM(space_states_dim, space_actions_dim, device= self.device)
+        self.actor = Actor(space_states_dim, space_actions_dim, device= self.device)
+        self.actor_target = Actor(space_states_dim, space_actions_dim, device= self.device)
         
 
 
-        self.critic = CriticLSTM(space_states_dim, space_actions_dim, device= self.device)
-        self.critic_target = CriticLSTM(space_states_dim, space_actions_dim, device= self.device)
+        self.critic = Critic(space_states_dim, space_actions_dim, device= self.device)
+        self.critic_target = Critic(space_states_dim, space_actions_dim, device= self.device)
         
         
         for target_param, param in zip(self.actor_target.parameters(), self.actor.parameters()):
