@@ -194,6 +194,8 @@ class TurtleBot3:
 
         done = True if distance_to_goal <= 0.2 else False
 
+        rospy.logwarn(f"Action ---> {distance_to_goal, angle_to_goal} {self.__raw_scan_range}")
+
         observation = [distance_to_goal, angle_to_goal] + self.__raw_scan_range
 
         return observation, done
