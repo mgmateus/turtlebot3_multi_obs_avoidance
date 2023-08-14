@@ -55,11 +55,9 @@ if __name__ == "__main__":
             state = np.float32(state)
             action = agent.get_action(state)
             
-            rospy.logwarn(f"Action agent ---> {action}")
             N = copy.deepcopy(noise.get_noise(t=step))        
             action[0] = np.clip(action[0] + (N[0]*.75), -1, 1)
             action[1] = np.clip(action[1] + (N[1]*.75), -1, 1)
-            rospy.logwarn(f"Action noise ---> {action}")
             new_state, reward, done = env.step(action) 
             rewards_current_episode += reward
             new_state = np.float32(new_state)
