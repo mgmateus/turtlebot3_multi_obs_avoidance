@@ -178,6 +178,7 @@ class TurtleBot3:
         #rospy.logwarn(f"{self.current_scan['forward']-self.past_scan['forward']}")
         target_position = np.clip(action[0], -0.5, 0.5)
         target_angle = np.clip(action[1], -np.pi, np.pi)
+        
         rospy.logwarn(f"Action ---> {action}")
         self.__cmd_vel.linear.x, self.__cmd_vel.angular.z = self.__pid.get_control_inputs(self._euclidian_distance_to_target(target_position),\
                                                                                           self._heading(target=target_angle))
