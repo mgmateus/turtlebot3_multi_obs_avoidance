@@ -38,7 +38,7 @@ params:
   batch_size: 512
   num_episodes: 10000
   max_steps: 2000
-  stoped_episode: 0
+  stoped_episode: 480
   max_reward: 0
   alpha_reward: 1
   betha_reward: 10
