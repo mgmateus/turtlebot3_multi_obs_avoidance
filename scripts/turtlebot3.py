@@ -176,13 +176,13 @@ class TurtleBot3:
         self._sample_adjust()
         
         #rospy.logwarn(f"{self.current_scan['forward']-self.past_scan['forward']}")
-        target_position = np.clip(action[0], -0.5, 0.5)
-        target_angle = np.clip(action[1], -np.pi, np.pi)
+        #target_position = np.clip(action[0], 0, 0.5)
+        #target_angle = np.clip(action[1], -np.pi, np.pi)
 
-        rospy.logwarn(f"Action ---> {action}")
-        self.__cmd_vel.linear.x, self.__cmd_vel.angular.z = self.__pid.get_control_inputs(self._euclidian_distance_to_target(target_position),\
-                                                                                          self._heading(target=target_angle))
-        
+        #rospy.logwarn(f"target_position ---> {target_position}, target_angle ---> {target_angle}")
+        #self.__cmd_vel.linear.x, self.__cmd_vel.angular.z = self.__pid.get_control_inputs(self._euclidian_distance_to_target(target_position),\
+        #                                                                                  self._heading(target=target_angle))
+        self.__cmd_vel.linear.x, self.__cmd_vel.angular.z = np.clip(action[0], -.25, .25), np.clip(action[1], -.25, .25)
         self.__publisher_cmd_vel.publish(self.__cmd_vel)
         
         distance_to_goal = self.euclidian_distance_to_goal()
